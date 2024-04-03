@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "scripts": {
+    "dev": "ts-node src/main.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.3"
+  }
+}
