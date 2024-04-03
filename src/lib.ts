@@ -113,6 +113,31 @@ export async function solve(
     return { player: player!, boxes, boxSet };
   }
 
+  function isInvalid({ boxSet }: SokobanState): boolean {
+    for (let y = 1; y < height; y++) {
+      for (let x = 1; x < width; x++) {
+        if (
+          !(
+            wallSet.has(`${x - 1},${y - 1}`) || boxSet.has(`${x - 1},${y - 1}`)
+          ) ||
+          !(wallSet.has(`${x},${y - 1}`) || boxSet.has(`${x},${y - 1}`)) ||
+          !(wallSet.has(`${x - 1},${y}`) || boxSet.has(`${x - 1},${y}`)) ||
+          !(wallSet.has(`${x},${y}`) || boxSet.has(`${x},${y}`))
+        )
+          continue;
+        if (
+          (boxSet.has(`${x - 1},${y - 1}`) &&
+            !goalSet.has(`${x - 1},${y - 1}`)) ||
+          (boxSet.has(`${1},${y - 1}`) && !goalSet.has(`${1},${y - 1}`)) ||
+          (boxSet.has(`${x - 1},${y}`) && !goalSet.has(`${x - 1},${y}`)) ||
+          (boxSet.has(`${x},${y}`) && !goalSet.has(`${x},${y}`))
+        )
+          return true;
+      }
+    }
+    return false;
+  }
+
   function nextState(
     { player, boxes, boxSet }: SokobanState,
     [x, y]: Point
@@ -133,11 +158,9 @@ export async function solve(
       const newBoxSet = new Set(newBoxes.map(([x, y]) => `${x},${y}`));
       return { player: [nextX, nextY], boxes: newBoxes, boxSet: newBoxSet };
     }
-    return {
-      player: [nextX, nextY],
-      boxes,
-      boxSet,
-    };
+    const result: SokobanState = { player: [nextX, nextY], boxes, boxSet };
+    if (isInvalid(result)) return null;
+    return result;
   }
 
   function isComplete({ boxes }: SokobanState) {
