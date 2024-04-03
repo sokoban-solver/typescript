@@ -103,6 +103,16 @@ export async function solve(
     return [player, ...boxes].map(([x, y]) => `${x},${y}`).join("/");
   }
 
+  function deserialize(input: string): SokobanState {
+    const [player, ...boxes] = input.split("/").map<Point>((point) => {
+      const tmp = point.split(",");
+      return [parseInt(tmp[0]!), parseInt(tmp[1]!)];
+    });
+    boxes.sort(([ax, ay], [bx, by]) => ay - by || ax - bx);
+    const boxSet = new Set(boxes.map(([x, y]) => `${x},${y}`));
+    return { player: player!, boxes, boxSet };
+  }
+
   function nextState(
     { player, boxes, boxSet }: SokobanState,
     [x, y]: Point
@@ -135,38 +145,38 @@ export async function solve(
   }
 
   let distance = 0;
-  const visited = new Map<string, [SokobanState, string]>([
-    [serialize(initialState), [initialState, ""]],
-  ]);
-  let current: [SokobanState, string][] = [[initialState, ""]];
+  const visited = new Map<string, string>([[serialize(initialState), ""]]);
+  let current: string[] = [serialize(initialState)];
   while (current.length) {
     await onDistance?.(distance);
-    const next: [SokobanState, string][] = [];
-    for (const [state, path] of current) {
+    const next: string[] = [];
+    for (const serializedState of current) {
+      const state = deserialize(serializedState);
+      const path = visited.get(serializedState);
       await onStep?.(state);
       const w = nextState(state, [0, -1]);
       if (w && !visited.has(serialize(w))) {
         if (isComplete(w)) return `${path}W`;
-        next.push([w, `${path}W`]);
-        visited.set(serialize(w), [w, `${path}W`]);
+        visited.set(serialize(w), `${path}W`);
+        next.push(serialize(w));
       }
       const a = nextState(state, [-1, 0]);
       if (a && !visited.has(serialize(a))) {
         if (isComplete(a)) return `${path}A`;
-        next.push([a, `${path}A`]);
-        visited.set(serialize(a), [a, `${path}A`]);
+        visited.set(serialize(a), `${path}A`);
+        next.push(serialize(a));
       }
       const s = nextState(state, [0, 1]);
       if (s && !visited.has(serialize(s))) {
         if (isComplete(s)) return `${path}S`;
-        next.push([s, `${path}S`]);
-        visited.set(serialize(s), [s, `${path}S`]);
+        visited.set(serialize(s), `${path}S`);
+        next.push(serialize(s));
       }
       const d = nextState(state, [1, 0]);
       if (d && !visited.has(serialize(d))) {
         if (isComplete(d)) return `${path}D`;
-        next.push([d, `${path}D`]);
-        visited.set(serialize(d), [d, `${path}D`]);
+        visited.set(serialize(d), `${path}D`);
+        next.push(serialize(d));
       }
     }
     current = next;
