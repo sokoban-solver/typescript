@@ -14,11 +14,13 @@ async function main() {
     console.error("Could not parse input");
     process.exit(1);
   }
+  let tried = 0;
   const result = await solve(
     ...mapAndInitialState,
-    undefined,
-    (distance: number) => console.log(`wait: ${distance}`)
+    () => tried++,
+    (distance: number) => console.log(`wait: ${distance} (${tried} tried)`)
   );
+  console.log(`${tried} tried.`);
   if (!result) {
     console.error("Could not solve");
     process.exit(1);
